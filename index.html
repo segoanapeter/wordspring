@@ -6,37 +6,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<div id="authGate" class="auth-gate">
-  <div class="auth-card">
-    <div class="auth-brand">🌱 WordSpring</div>
-    <h1 id="authTitle">Welcome back</h1><p id="authIntro">Log in to continue your learning journey.</p>
-    <div class="auth-tabs"><button id="loginTab" class="active" onclick="setAuthMode('login')">Log in</button><button id="signupTab" onclick="setAuthMode('signup')">Sign up</button></div>
-    <form id="authForm" onsubmit="submitAuth(event)">
-      <label>Email address<input id="authEmail" type="email" autocomplete="email" required placeholder="name@example.com"></label>
-      <label>Password<input id="authPassword" type="password" autocomplete="current-password" minlength="8" required placeholder="At least 8 characters"></label>
-      <label id="confirmWrap" class="hidden">Confirm password<input id="authConfirm" type="password" minlength="8" placeholder="Repeat your password"></label>
-      <button id="authSubmit" class="action auth-submit" type="submit">Log in</button>
-    </form>
-    <button id="forgotButton" class="link-button" onclick="forgotPassword()">Forgot password?</button>
-    <p id="authMessage" class="auth-message"></p>
-    <small class="privacy-note">Your password is securely handled by our authentication provider and is never stored in the WordSpring website code.</small>
-  </div>
-</div>
-<div id="appShell" class="hidden">
-<header><div class="brand">🌱 WordSpring</div><div class="header-actions"><span id="userEmail" class="user-email"></span><label>Level <select id="levelSelect" onchange="changeLevel(this.value)"><option value="starter">Starter 5–7</option><option value="builder">Builder 8–10</option><option value="explorer">Explorer 11–13</option></select></label><button class="score-btn" onclick="openScores()">🏆 My Score Sheet</button><button class="secondary" onclick="logout()">Log out</button></div></header>
-<main>
-<section class="hero"><div><span>LEARN • READ • SPEAK • WRITE</span><h1>Welcome, Word Explorer!</h1><p>Practise South African English through reading, pronunciation, grammar, vocabulary and writing.</p></div><div class="hero-score"><b id="xp">0 XP</b><small>Learning points</small><strong id="accuracy">0%</strong><small>Accuracy</small></div></section>
-<section class="progress-wrap"><div><b>Today's progress</b><span id="progressText">0 of 18 exercises</span></div><div class="progress"><i id="progressBar"></i></div></section>
-<section class="grid">
-<button type="button" onclick="openLesson('sentence')"><b>✍️ Sentence Studio</b><small>Build complete sentences and master punctuation.</small></button>
-<button type="button" onclick="openLesson('reading')"><b>📖 Read & Understand</b><small>Read South African stories and answer questions.</small></button>
-<button type="button" onclick="openLesson('speech')"><b>🎙️ Pronunciation Lab</b><small>Listen and practise South African English words.</small></button>
-<button type="button" onclick="openLesson('words')"><b>🌱 Word Garden</b><small>Grow vocabulary, spelling and meaning.</small></button>
-<button type="button" onclick="openLesson('grammar')"><b>🧩 Grammar Detective</b><small>Choose and correct grammar mistakes.</small></button>
-<button type="button" onclick="openLesson('quest')"><b>🏆 Daily Quest</b><small>Mixed challenges for extra points.</small></button>
-</section>
-<section id="lesson" class="lesson"><h2>Your learning adventure starts here</h2><p>Choose an activity above. Each section contains multiple exercises and your results are saved automatically.</p></section>
-</main>
-<footer>WordSpring • Grow every word into confidence • South African English</footer>
-</div>
-<script src="app-fixed.js?v=3"></script><script src="exercise-upgrades.js?v=1"></script><script src="auth.js?v=3"></script></body></html>
+<div id="authGate" class="auth-gate"><div class="auth-card"><div class="auth-brand">🌱 WordSpring</div><h1 id="authTitle">Welcome back</h1><p id="authIntro">Log in to continue your learning journey.</p><div class="auth-tabs"><button id="loginTab" class="active" onclick="setAuthMode('login')">Log in</button><button id="signupTab" onclick="setAuthMode('signup')">Sign up</button></div><form id="authForm" onsubmit="submitAuth(event)"><label>Email address<input id="authEmail" type="email" autocomplete="email" required placeholder="name@example.com"></label><label>Password<input id="authPassword" type="password" autocomplete="current-password" minlength="8" required placeholder="At least 8 characters"></label><label id="confirmWrap" class="hidden">Confirm password<input id="authConfirm" type="password" minlength="8" placeholder="Repeat your password"></label><button id="authSubmit" class="action auth-submit" type="submit">Log in</button></form><button id="forgotButton" class="link-button" onclick="forgotPassword()">Forgot password?</button><p id="authMessage" class="auth-message"></p><small class="privacy-note">Your password is securely handled by our authentication provider and is never stored in the WordSpring website code.</small></div></div>
+<div id="appShell" class="hidden"><header><div class="brand">🌱 WordSpring</div><div class="header-actions"><span id="userEmail" class="user-email"></span><label>Grade <select id="levelSelect" onchange="changeLevel(this.value)"><option value="grade1">Grade 1</option><option value="grade2">Grade 2</option><option value="grade3">Grade 3</option><option value="grade4">Grade 4</option><option value="grade5">Grade 5</option></select></label><button class="score-btn" onclick="openScores()">🏆 My Score Sheet</button><button class="secondary" onclick="logout()">Log out</button></div></header>
+<main><section class="hero"><div><span>LEARN • READ • SPEAK • WRITE</span><h1>Welcome, Word Explorer!</h1><p>Grade-based South African English practice informed by CAPS literacy skills.</p></div><div class="hero-score"><b id="xp">0 XP</b><small>Learning points</small><strong id="accuracy">0%</strong><small>Accuracy</small></div></section><section class="progress-wrap"><div><b>Grade progress</b><span id="progressText">0 of 24 exercises</span></div><div class="progress"><i id="progressBar"></i></div></section>
+<section class="grid"><button type="button" onclick="openLesson('sentence')"><b>✍️ Sentence Studio</b><small>Grade-level sentence construction and punctuation.</small></button><button type="button" onclick="openLesson('reading')"><b>📖 Read & Understand</b><small>Comprehension, main ideas, details and inference.</small></button><button type="button" onclick="openLesson('speech')"><b>🎙️ Pronunciation Lab</b><small>Phonics, syllables and South African English pronunciation.</small></button><button type="button" onclick="openLesson('words')"><b>🌱 Word Garden</b><small>Vocabulary, meaning, synonyms and word knowledge.</small></button><button type="button" onclick="openLesson('grammar')"><b>🧩 Grammar Detective</b><small>Language structures, conventions and editing.</small></button><button type="button" onclick="openLesson('quest')"><b>🏆 Daily Quest</b><small>Mixed grade-level literacy challenges.</small></button></section><section id="lesson" class="lesson"><h2>Your learning adventure starts here</h2><p>Select your school grade above, then choose an activity. Questions become more challenging from Grade 1 to Grade 5.</p></section></main><footer>WordSpring • Grow every word into confidence • South African English</footer></div>
+<script src="app-fixed.js?v=4"></script><script src="grade-curriculum.js?v=1"></script><script src="exercise-upgrades.js?v=2"></script><script src="auth.js?v=4"></script></body></html>
