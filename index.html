@@ -26,17 +26,17 @@
 <header><div class="brand">🌱 WordSpring</div><div class="header-actions"><span id="userEmail" class="user-email"></span><label>Level <select id="levelSelect" onchange="changeLevel(this.value)"><option value="starter">Starter 5–7</option><option value="builder">Builder 8–10</option><option value="explorer">Explorer 11–13</option></select></label><button class="score-btn" onclick="openScores()">🏆 My Score Sheet</button><button class="secondary" onclick="logout()">Log out</button></div></header>
 <main>
 <section class="hero"><div><span>LEARN • READ • SPEAK • WRITE</span><h1>Welcome, Word Explorer!</h1><p>Practise South African English through reading, pronunciation, grammar, vocabulary and writing.</p></div><div class="hero-score"><b id="xp">0 XP</b><small>Learning points</small><strong id="accuracy">0%</strong><small>Accuracy</small></div></section>
-<section class="progress-wrap"><div><b>Today's progress</b><span id="progressText">0 of 0 exercises</span></div><div class="progress"><i id="progressBar"></i></div></section>
+<section class="progress-wrap"><div><b>Today's progress</b><span id="progressText">0 of 18 exercises</span></div><div class="progress"><i id="progressBar"></i></div></section>
 <section class="grid">
-<button onclick="openLesson('sentence')"><b>✍️ Sentence Studio</b><small>Build complete sentences and master punctuation.</small></button>
-<button onclick="openLesson('reading')"><b>📖 Read & Understand</b><small>Read South African stories and answer questions.</small></button>
-<button onclick="openLesson('speech')"><b>🎙️ Pronunciation Lab</b><small>Listen and practise South African English words.</small></button>
-<button onclick="openLesson('words')"><b>🌱 Word Garden</b><small>Grow vocabulary, spelling and meaning.</small></button>
-<button onclick="openLesson('grammar')"><b>🧩 Grammar Detective</b><small>Choose and correct grammar mistakes.</small></button>
-<button onclick="openLesson('quest')"><b>🏆 Daily Quest</b><small>Mixed challenges for extra points.</small></button>
+<button type="button" onclick="openLesson('sentence')"><b>✍️ Sentence Studio</b><small>Build complete sentences and master punctuation.</small></button>
+<button type="button" onclick="openLesson('reading')"><b>📖 Read & Understand</b><small>Read South African stories and answer questions.</small></button>
+<button type="button" onclick="openLesson('speech')"><b>🎙️ Pronunciation Lab</b><small>Listen and practise South African English words.</small></button>
+<button type="button" onclick="openLesson('words')"><b>🌱 Word Garden</b><small>Grow vocabulary, spelling and meaning.</small></button>
+<button type="button" onclick="openLesson('grammar')"><b>🧩 Grammar Detective</b><small>Choose and correct grammar mistakes.</small></button>
+<button type="button" onclick="openLesson('quest')"><b>🏆 Daily Quest</b><small>Mixed challenges for extra points.</small></button>
 </section>
 <section id="lesson" class="lesson"><h2>Your learning adventure starts here</h2><p>Choose an activity above. Each section contains multiple exercises and your results are saved automatically.</p></section>
 </main>
 <footer>WordSpring • Grow every word into confidence • South African English</footer>
 </div>
-<script src="app.js"></script><script src="auth.js"></script></body></html>
+<script src="app-fixed.js?v=2"></script><script src="auth.js?v=2"></script></body></html>
