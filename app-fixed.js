@@ -1,0 +1,219 @@
+const lesson = document.getElementById('lesson');
+let level = localStorage.getItem('wsLevel') || 'starter';
+let scores = JSON.parse(localStorage.getItem('wsScores') || '{}');
+let current = { type: null, index: 0 };
+
+const banks = {
+  starter: {
+    sentence: [
+      ['dog • happy • runs • outside', 'The happy dog runs outside.'],
+      ['I • like • reading • books', 'I like reading books.'],
+      ['birds • sing • morning', 'Birds sing in the morning.']
+    ],
+    reading: [
+      ['Lebo planted a seed. She watered it every morning. Soon a green shoot appeared.', 'What did Lebo give the seed?', ['Water','Milk','Sand'], 0],
+      ['Thabo packed his school bag before bed. In the morning he was ready early.', 'Why was Thabo ready early?', ['He packed his bag before bed','He missed school','He lost his bag'], 0],
+      ['Naledi saw dark clouds and took an umbrella. Rain began on her walk home.', 'Why did Naledi take an umbrella?', ['It was sunny','She saw dark clouds','She wanted shade'], 1]
+    ],
+    speech: [['beautiful','beau • ti • ful'],['school','school'],['wonderful','won • der • ful']],
+    words: [
+      ['curious','wanting to know or learn something',['interested','sleepy','angry'],0],
+      ['brave','ready to face something difficult',['courageous','hungry','quiet'],0],
+      ['enormous','very large',['tiny','huge','slow'],1]
+    ],
+    grammar: [
+      ['the dogs is playing outside',['The dogs are playing outside.','The dogs is playing outside.','the dog are playing outside'],0],
+      ['she walk to school every day',['She walks to school every day.','She walk school every day.','she walks to school every day'],0],
+      ['we was happy to see them',['We were happy to see them.','We was happy to see them.','we were happy see them'],0]
+    ],
+    quest: [
+      ['Which word is the adverb? “The puppy raced happily across the garden.”',['puppy','happily','garden'],1],
+      ['Choose the correctly punctuated sentence.',['Where are you going?','where are you going','Where are you going'],0],
+      ['Which word is a noun? “The teacher opened the book.”',['opened','teacher','the'],1]
+    ]
+  },
+  builder: {
+    sentence: [
+      ['sister • carefully • painted • wooden chair','My sister carefully painted the wooden chair.'],
+      ['learners • completed • project • together','The learners completed the project together.'],
+      ['rain • fell • softly • roof','The rain fell softly on the roof.']
+    ],
+    reading: [
+      ['Ayesha borrowed a library book about space. She read a chapter each night and wrote down new facts.','What habit helped Ayesha learn?',['Reading regularly','Skipping chapters','Watching television'],0],
+      ['Kagiso noticed litter near the soccer field. He and his friends collected it and sorted recyclable items.','What did the friends do after collecting litter?',['Burned it','Sorted recyclable items','Left it there'],1],
+      ['Zanele practised her speech several times before assembly. When she spoke, she felt confident.','What most likely helped Zanele feel confident?',['Practice','Luck','Speaking quietly'],0]
+    ],
+    speech: [['responsibility','re • spon • si • bil • i • ty'],['education','ed • u • ca • tion'],['community','com • mu • ni • ty']],
+    words: [
+      ['determined','not giving up easily',['persistent','careless','confused'],0],
+      ['observe','to watch carefully',['notice','forget','hide'],0],
+      ['essential','completely necessary',['optional','necessary','unusual'],1]
+    ],
+    grammar: [
+      ['the children was excited',['The children were excited.','The children was excited.','the children were excited'],0],
+      ['sipho and me went to the library',['Sipho and I went to the library.','Sipho and me went library.','sipho and I went to library'],0],
+      ['yesterday we play football',['Yesterday we played football.','Yesterday we play football.','yesterday we playing football'],0]
+    ],
+    quest: [
+      ['Choose the adjective: “The bright sun warmed the playground.”',['warmed','bright','playground'],1],
+      ['Which sentence uses the past tense?',['We walk home.','We walked home.','We will walk home.'],1],
+      ['Choose the best conjunction: “I studied hard ___ I wanted to improve.”',['because','but','or'],0]
+    ]
+  },
+  explorer: {
+    sentence: [
+      ['although • rain continued • team • finished • match','Although the rain continued, the team finished the match.'],
+      ['because • research • thorough • presentation • convincing','Because the research was thorough, the presentation was convincing.'],
+      ['learners • who practised regularly • improved • fluency','Learners who practised regularly improved their fluency.']
+    ],
+    reading: [
+      ['Mpho initially found public speaking difficult. Instead of avoiding it, he joined the debate club and volunteered for short presentations. Over time, his confidence grew.','What is the main idea?',['Avoid difficult tasks','Practice can build confidence','Debate is easy'],1],
+      ['A community garden transformed an unused piece of land. Residents grew vegetables, shared skills and donated extra produce to a nearby centre.','Which benefit is supported by the passage?',['The project strengthened community cooperation','The land became a car park','Residents stopped growing food'],0],
+      ['After comparing several sources, Lerato discovered that two articles made conflicting claims. She checked the authors and evidence before deciding which was more reliable.','What skill did Lerato demonstrate?',['Critical evaluation','Memorisation','Guessing'],0]
+    ],
+    speech: [['entrepreneurship','en • tre • pre • neur • ship'],['communication','com • mu • ni • ca • tion'],['extraordinary','ex • traor • di • na • ry']],
+    words: [
+      ['credible','able to be trusted',['reliable','ordinary','unclear'],0],
+      ['interpret','to explain or understand meaning',['analyse meaning','copy','ignore'],0],
+      ['significant','important or noticeable',['minor','important','hidden'],1]
+    ],
+    grammar: [
+      ['neither of the answers are correct',['Neither of the answers is correct.','Neither of the answers are correct.','neither answers is correct'],0],
+      ['if i had known i would have helped',['If I had known, I would have helped.','If I knew, I would helped.','if I had known I help'],0],
+      ['the report which was detailed it explained the problem',['The detailed report explained the problem.','The report detailed it explained the problem.','the report which detailed explained'],0]
+    ],
+    quest: [
+      ['Which sentence contains a subordinate clause?',['We arrived early.','Although it was raining, we continued walking.','The bell rang.'],1],
+      ['Choose the strongest synonym for “important”.',['significant','nice','small'],0],
+      ['Which punctuation best joins two closely related independent clauses?',['Semicolon','Apostrophe','Quotation mark'],0]
+    ]
+  }
+};
+
+function save() {
+  localStorage.setItem('wsScores', JSON.stringify(scores));
+  localStorage.setItem('wsLevel', level);
+  updateStats();
+}
+function key(t){ return level + '_' + t; }
+function stat(t){ return scores[key(t)] || (scores[key(t)] = {attempts:0,correct:0,completed:0}); }
+function changeLevel(v){
+  level = v;
+  save();
+  lesson.innerHTML = '<h2>Level changed!</h2><p>Choose an activity to start ' + v + ' exercises.</p>';
+}
+function getSAvoice(){
+  const vs = speechSynthesis.getVoices();
+  return vs.find(v => v.lang.toLowerCase() === 'en-za')
+    || vs.find(v => /south africa/i.test(v.name))
+    || vs.find(v => v.lang.toLowerCase().startsWith('en-gb'))
+    || vs.find(v => v.lang.toLowerCase().startsWith('en'));
+}
+function speak(t){
+  if(!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(t);
+  const v = getSAvoice();
+  u.lang = 'en-ZA';
+  if(v) u.voice = v;
+  u.rate = .88;
+  speechSynthesis.speak(u);
+}
+if('speechSynthesis' in window) speechSynthesis.onvoiceschanged = () => getSAvoice();
+
+function titles(t){
+  return {
+    sentence:'✍️ Sentence Studio',
+    reading:'📖 Read & Understand',
+    speech:'🎙️ Pronunciation Lab',
+    words:'🌱 Word Garden',
+    grammar:'🧩 Grammar Detective',
+    quest:'🏆 Daily Quest'
+  }[t];
+}
+function choices(a,correct){
+  return '<div class="choices">' + a.map((x,i) =>
+    `<button type="button" onclick="answerChoice(${i},${correct})">${x}</button>`
+  ).join('') + '</div>';
+}
+function openLesson(type,index=0){
+  current = {type,index};
+  const q = banks[level][type][index];
+  const n = banks[level][type].length;
+  let html = `<div class="exercise-head"><h2>${titles(type)}</h2><span>Exercise ${index+1} of ${n}</span></div>`;
+  if(type==='sentence') html += `<p>Use the ideas to write one complete sentence:</p><div class="tip">${q[0]}</div><input id="answer" placeholder="Write your sentence..."><button type="button" class="action" onclick="checkWritten(${JSON.stringify(q[1])})">Check answer</button>`;
+  if(type==='reading') html += `<p id="story">${q[0]}</p><button type="button" class="secondary" onclick="speak(document.getElementById('story').innerText)">🔊 Read to me (South African English)</button><h3>${q[1]}</h3>${choices(q[2],q[3])}`;
+  if(type==='speech') html += `<p>Listen carefully, then practise saying the word aloud.</p><div class="word">${q[0]}</div><p>${q[1]}</p><button type="button" class="action" onclick="speak(${JSON.stringify(q[0])})">🔊 Hear South African pronunciation</button><div class="tip">Say the word aloud three times, then mark your practice.</div><button type="button" class="secondary" onclick="selfPractice()">✓ I practised this word</button>`;
+  if(type==='words') html += `<div class="word">${q[0]}</div><p><b>Meaning:</b> ${q[1]}</p><button type="button" class="secondary" onclick="speak(${JSON.stringify(q[0])})">🔊 Hear word</button><h3>Choose the closest meaning:</h3>${choices(q[2],q[3])}`;
+  if(type==='grammar') html += `<p>Choose the correctly written sentence:</p><div class="tip">${q[0]}</div>${choices(q[1],q[2])}`;
+  if(type==='quest') html += `<h3>${q[0]}</h3>${choices(q[1],q[2])}`;
+  html += '<p id="feedback" class="feedback"></p><div class="nav-actions"><button type="button" class="secondary" onclick="nextExercise()">Next exercise →</button><button type="button" class="secondary" onclick="openScores()">🏆 Score sheet</button></div>';
+  lesson.innerHTML = html;
+  lesson.scrollIntoView({behavior:'smooth', block:'start'});
+}
+function answerChoice(i,c){
+  const ok = i===c;
+  record(ok);
+  const f = document.getElementById('feedback');
+  f.textContent = ok ? '⭐ Correct! Great work.' : '💡 Not quite. Try the next exercise and keep learning.';
+  f.className = 'feedback ' + (ok ? 'good' : 'try');
+}
+function normal(s){ return s.toLowerCase().replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim(); }
+function checkWritten(expected){
+  const a = document.getElementById('answer').value.trim();
+  const ok = /^[A-Z]/.test(a) && /[.!?]$/.test(a) && normal(a)===normal(expected);
+  record(ok);
+  const f = document.getElementById('feedback');
+  f.textContent = ok ? '⭐ Excellent complete sentence!' : '💡 Good try. Check the word order, capital letter and punctuation. Example: ' + expected;
+  f.className = 'feedback ' + (ok ? 'good' : 'try');
+}
+function selfPractice(){
+  record(true);
+  const f = document.getElementById('feedback');
+  f.textContent = '⭐ Pronunciation practice recorded!';
+  f.className = 'feedback good';
+}
+function record(ok){
+  const s = stat(current.type);
+  s.attempts++;
+  if(ok) s.correct++;
+  s.completed++;
+  save();
+}
+function nextExercise(){
+  const n = banks[level][current.type].length;
+  openLesson(current.type,(current.index+1)%n);
+}
+function summary(){
+  let a=0,c=0,d=0;
+  Object.values(scores).forEach(s => { a += s.attempts||0; c += s.correct||0; d += s.completed||0; });
+  return {attempts:a,correct:c,completed:d,accuracy:a?Math.round(c/a*100):0};
+}
+function openScores(){
+  const types=['sentence','reading','speech','words','grammar','quest'];
+  const rows=types.map(t=>{
+    const s=stat(t), acc=s.attempts?Math.round(s.correct/s.attempts*100):0;
+    return `<tr><td>${titles(t)}</td><td>${s.completed}</td><td>${s.correct}</td><td>${acc}%</td></tr>`;
+  }).join('');
+  const total=summary();
+  lesson.innerHTML=`<h2>🏆 My Score Sheet</h2><p>Your results are saved on this device.</p><div class="score-cards"><div class="score-card"><b>${total.completed}</b>Exercises</div><div class="score-card"><b>${total.correct}</b>Correct</div><div class="score-card"><b>${total.accuracy}%</b>Accuracy</div></div><table class="score-table"><thead><tr><th>Activity</th><th>Done</th><th>Correct</th><th>Score</th></tr></thead><tbody>${rows}</tbody></table><div class="nav-actions"><button type="button" class="secondary" onclick="resetScores()">Reset scores</button></div>`;
+  lesson.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function updateStats(){
+  const s=summary();
+  const xp=document.getElementById('xp'), accuracy=document.getElementById('accuracy'), progressText=document.getElementById('progressText'), progressBar=document.getElementById('progressBar'), levelSelect=document.getElementById('levelSelect');
+  if(xp) xp.textContent=(s.correct*10)+' XP';
+  if(accuracy) accuracy.textContent=s.accuracy+'%';
+  const goal=18, p=Math.min(100,Math.round(s.completed/goal*100));
+  if(progressText) progressText.textContent=s.completed+' of '+goal+' exercises';
+  if(progressBar) progressBar.style.width=p+'%';
+  if(levelSelect) levelSelect.value=level;
+}
+function resetScores(){
+  if(confirm('Reset all WordSpring scores on this device?')){
+    scores={};
+    save();
+    openScores();
+  }
+}
+updateStats();
