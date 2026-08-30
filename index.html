@@ -3,9 +3,27 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>WordSpring | Learn, Read, Speak & Write</title><link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<header><div class="brand">🌱 WordSpring</div><div class="header-actions"><label>Level <select id="levelSelect" onchange="changeLevel(this.value)"><option value="starter">Starter 5–7</option><option value="builder">Builder 8–10</option><option value="explorer">Explorer 11–13</option></select></label><button class="score-btn" onclick="openScores()">🏆 My Score Sheet</button></div></header>
+<div id="authGate" class="auth-gate">
+  <div class="auth-card">
+    <div class="auth-brand">🌱 WordSpring</div>
+    <h1 id="authTitle">Welcome back</h1><p id="authIntro">Log in to continue your learning journey.</p>
+    <div class="auth-tabs"><button id="loginTab" class="active" onclick="setAuthMode('login')">Log in</button><button id="signupTab" onclick="setAuthMode('signup')">Sign up</button></div>
+    <form id="authForm" onsubmit="submitAuth(event)">
+      <label>Email address<input id="authEmail" type="email" autocomplete="email" required placeholder="name@example.com"></label>
+      <label>Password<input id="authPassword" type="password" autocomplete="current-password" minlength="8" required placeholder="At least 8 characters"></label>
+      <label id="confirmWrap" class="hidden">Confirm password<input id="authConfirm" type="password" minlength="8" placeholder="Repeat your password"></label>
+      <button id="authSubmit" class="action auth-submit" type="submit">Log in</button>
+    </form>
+    <button id="forgotButton" class="link-button" onclick="forgotPassword()">Forgot password?</button>
+    <p id="authMessage" class="auth-message"></p>
+    <small class="privacy-note">Your password is securely handled by our authentication provider and is never stored in the WordSpring website code.</small>
+  </div>
+</div>
+<div id="appShell" class="hidden">
+<header><div class="brand">🌱 WordSpring</div><div class="header-actions"><span id="userEmail" class="user-email"></span><label>Level <select id="levelSelect" onchange="changeLevel(this.value)"><option value="starter">Starter 5–7</option><option value="builder">Builder 8–10</option><option value="explorer">Explorer 11–13</option></select></label><button class="score-btn" onclick="openScores()">🏆 My Score Sheet</button><button class="secondary" onclick="logout()">Log out</button></div></header>
 <main>
 <section class="hero"><div><span>LEARN • READ • SPEAK • WRITE</span><h1>Welcome, Word Explorer!</h1><p>Practise South African English through reading, pronunciation, grammar, vocabulary and writing.</p></div><div class="hero-score"><b id="xp">0 XP</b><small>Learning points</small><strong id="accuracy">0%</strong><small>Accuracy</small></div></section>
 <section class="progress-wrap"><div><b>Today's progress</b><span id="progressText">0 of 0 exercises</span></div><div class="progress"><i id="progressBar"></i></div></section>
@@ -17,7 +35,8 @@
 <button onclick="openLesson('grammar')"><b>🧩 Grammar Detective</b><small>Choose and correct grammar mistakes.</small></button>
 <button onclick="openLesson('quest')"><b>🏆 Daily Quest</b><small>Mixed challenges for extra points.</small></button>
 </section>
-<section id="lesson" class="lesson"><h2>Your learning adventure starts here</h2><p>Choose an activity above. Each section now contains multiple exercises and your results are saved automatically.</p></section>
+<section id="lesson" class="lesson"><h2>Your learning adventure starts here</h2><p>Choose an activity above. Each section contains multiple exercises and your results are saved automatically.</p></section>
 </main>
 <footer>WordSpring • Grow every word into confidence • South African English</footer>
-<script src="app.js"></script></body></html>
+</div>
+<script src="app.js"></script><script src="auth.js"></script></body></html>
