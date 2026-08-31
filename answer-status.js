@@ -1,5 +1,5 @@
 // WordSpring answer status and reliable per-activity marking.
-// Sentence Studio keeps feedback until the end so learners can complete the full activity first.
+// Sentence Studio saves each response and shows corrections only after the full activity.
 (function(){
   let run = {type:null, startAttempts:0, startCorrect:0, startCompleted:0};
   let answeredCurrent=false;
@@ -84,11 +84,30 @@
     return mistakes;
   }
 
+  // app-fixed.js builds the Sentence Studio check button with an inline expected-answer
+  // argument. Quotation marks inside that generated attribute can prevent the click from
+  // reaching checkWritten(). Bind the button safely after every sentence is rendered.
+  function bindSentenceCheckButton(){
+    if(!current || current.type!=='sentence') return;
+    const input=document.getElementById('answer');
+    if(!input) return;
+    const btn=[...document.querySelectorAll('#lesson button')].find(b=>/check answer/i.test(b.textContent));
+    if(!btn) return;
+    const q=banks[level]?.sentence?.[current.index];
+    const expected=q?.[1] || '';
+    btn.removeAttribute('onclick');
+    btn.onclick=null;
+    btn.addEventListener('click',function sentenceCheckHandler(){
+      window.checkWritten(expected);
+    },{once:true});
+  }
+
   const baseOpenLesson=window.openLesson;
   window.openLesson=function(type,index=0){
     if(index===0) startRun(type); else ensureRun(type);
     answeredCurrent=false;
     baseOpenLesson(type,index);
+    if(type==='sentence') bindSentenceCheckButton();
   };
 
   window.answerChoice=function(i,correctIndex){
@@ -107,7 +126,7 @@
     ensureRun(current.type);
     const input=document.getElementById('answer');
     const a=input?input.value.trim():'';
-    if(!a){showStatus(false,'Please write your answer before checking it.');return;}
+    if(!a){showStatus(false,'Please write your answer before saving it.');return;}
 
     answeredCurrent=true;
     const mistakes=sentenceMistakes(a,expected);
@@ -187,6 +206,7 @@
     if(next<n){
       answeredCurrent=false;
       baseOpenLesson(type,next);
+      if(type==='sentence') bindSentenceCheckButton();
       return;
     }
 
