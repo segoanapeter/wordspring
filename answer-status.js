@@ -84,9 +84,6 @@
     return mistakes;
   }
 
-  // app-fixed.js builds the Sentence Studio check button with an inline expected-answer
-  // argument. Quotation marks inside that generated attribute can prevent the click from
-  // reaching checkWritten(). Bind the button safely after every sentence is rendered.
   function bindSentenceCheckButton(){
     if(!current || current.type!=='sentence') return;
     const input=document.getElementById('answer');
@@ -196,6 +193,19 @@
     if(!current || !current.type) return;
     const type=current.type;
     const n=banks[level][type].length;
+
+    // In Sentence Studio, typing a sentence is enough. Clicking Next automatically
+    // saves and marks it silently, so learners do not need to press Check answer.
+    if(type==='sentence' && !answeredCurrent){
+      const input=document.getElementById('answer');
+      const typed=input?input.value.trim():'';
+      if(!typed){
+        showStatus(false,'Please write your sentence before continuing.');
+        return;
+      }
+      const expected=banks[level]?.sentence?.[current.index]?.[1] || '';
+      window.checkWritten(expected);
+    }
 
     if(!answeredCurrent){
       showStatus(false,type==='speech'?'Please complete the pronunciation practice before continuing.':'Please answer this exercise before continuing.');
