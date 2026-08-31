@@ -1,8 +1,9 @@
 // WordSpring answer status and reliable per-activity marking.
-// Activity results are calculated from score differences, so completion totals cannot reset to zero.
+// Sentence Studio keeps feedback until the end so learners can complete the full activity first.
 (function(){
   let run = {type:null, startAttempts:0, startCorrect:0, startCompleted:0};
   let answeredCurrent=false;
+  let sentenceReview=[];
 
   function snapshot(type){
     const s=stat(type)||{};
@@ -17,10 +18,17 @@
   function startRun(type){
     run=snapshot(type);
     answeredCurrent=false;
+    if(type==='sentence') sentenceReview=[];
   }
 
   function ensureRun(type){
     if(!run.type || run.type!==type) startRun(type);
+  }
+
+  function esc(value){
+    return String(value??'').replace(/[&<>"']/g,ch=>({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[ch]));
   }
 
   function currentCorrectAnswer(){
@@ -44,6 +52,13 @@
     f.className='feedback '+(ok?'good':'try');
   }
 
+  function showSaved(){
+    const f=document.getElementById('feedback');
+    if(!f) return;
+    f.innerHTML='<div class="answer-status"><span class="answer-icon">✓</span><div><strong>Answer saved</strong><div class="answer-detail">Continue to the next sentence. Your corrections will be shown at the end.</div></div></div>';
+    f.className='feedback good';
+  }
+
   function markChoiceButtons(selected,correct){
     [...document.querySelectorAll('#lesson .choices button')].forEach((btn,i)=>{
       btn.disabled=true;
@@ -59,6 +74,14 @@
     [...document.querySelectorAll('#lesson button')].forEach(btn=>{
       if(/check answer/i.test(btn.textContent)) btn.disabled=true;
     });
+  }
+
+  function sentenceMistakes(answer,expected){
+    const mistakes=[];
+    if(!/^[A-Z]/.test(answer)) mistakes.push('Start the sentence with a capital letter.');
+    if(!/[.!?]$/.test(answer)) mistakes.push('Finish the sentence with punctuation.');
+    if(normal(answer)!==normal(expected)) mistakes.push('Check the word order and make sure all the needed words are used.');
+    return mistakes;
   }
 
   const baseOpenLesson=window.openLesson;
@@ -85,9 +108,26 @@
     const input=document.getElementById('answer');
     const a=input?input.value.trim():'';
     if(!a){showStatus(false,'Please write your answer before checking it.');return;}
+
     answeredCurrent=true;
-    const ok=/^[A-Z]/.test(a)&&/[.!?]$/.test(a)&&normal(a)===normal(expected);
+    const mistakes=sentenceMistakes(a,expected);
+    const ok=mistakes.length===0;
     record(ok);
+
+    if(current.type==='sentence'){
+      sentenceReview.push({
+        number:current.index+1,
+        answer:a,
+        expected,
+        ok,
+        mistakes
+      });
+      if(input) input.disabled=true;
+      lockWrittenButton();
+      showSaved();
+      return;
+    }
+
     if(input){input.disabled=true;input.classList.add(ok?'written-correct':'written-wrong');}
     lockWrittenButton();
     if(ok) showStatus(true,'Your sentence is correct.');
@@ -113,6 +153,24 @@
     const wrong=Math.max(0,answered-correct);
     const accuracy=answered?Math.round(correct/answered*100):0;
     return {answered,correct,wrong,completed,accuracy};
+  }
+
+  function sentenceReviewMarkup(){
+    const wrong=sentenceReview.filter(x=>!x.ok);
+    if(!wrong.length){
+      return '<section class="sentence-review"><h3>🌟 Excellent work!</h3><p>You completed every sentence correctly.</p></section>';
+    }
+    return `<section class="sentence-review">
+      <h3>📝 Review your mistakes</h3>
+      <p>Look at each correction before trying the activity again.</p>
+      ${wrong.map(item=>`<div class="tip sentence-review-item">
+        <strong>Exercise ${item.number}</strong>
+        <p><b>Your answer:</b> ${esc(item.answer)}</p>
+        <p><b>Model answer:</b> ${esc(item.expected)}</p>
+        <p><b>What to fix:</b> ${item.mistakes.map(esc).join(' ')}</p>
+        <button type="button" class="link-button" onclick="speak(${JSON.stringify(item.expected)})">🔊 Listen to model answer</button>
+      </div>`).join('')}
+    </section>`;
   }
 
   window.nextExercise=function(){
@@ -143,6 +201,7 @@
         <div class="score-card result-wrong"><b>✕ ${r.wrong}</b>Wrong</div>
         <div class="score-card"><b>${r.accuracy}%</b>Accuracy</div>
       </div>
+      ${type==='sentence'?sentenceReviewMarkup():''}
       <div class="nav-actions">
         <button type="button" class="secondary" onclick="openScores()">🏆 View score sheet</button>
         <button type="button" class="secondary" onclick="openLesson('${type}',0)">↻ Try activity again</button>
