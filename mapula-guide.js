@@ -14,43 +14,57 @@ let pending=null;
 function gradeLabel(){return (window.gradeNames&&gradeNames[level])||String(level||'').replace('grade','Grade ');}
 function introText(type){const g=guides[type];return `Hi! I'm Mapula, your WordSpring learning buddy. Welcome to ${g.title}. ${g.goal} Here's my tip: ${g.tip} ${g.motivation}`;}
 
-// Mapula should sound youthful, bright and South African. Browser voices vary by device,
-// so prefer a female en-ZA voice and avoid obviously mature/narrator voices where possible.
+// Mapula must use a true South African English system voice. We deliberately do NOT
+// fall back to US/GB English because that changes her character and accent.
 function mapulaVoice(){
  const voices=speechSynthesis.getVoices();
  if(!voices.length) return null;
- const femaleHints=/female|woman|girl|lebo|thando|zanele|ayanda|naledi|lindi|samantha|tessa|zira/i;
- const matureHints=/male|man|david|mark|george|daniel|narrator|grandma|grandmother/i;
+ const za=voices.filter(v=>{
+   const lang=(v.lang||'').toLowerCase();
+   const name=v.name||'';
+   return lang==='en-za' || lang.startsWith('en-za') || /south africa|south african/i.test(name);
+ });
+ if(!za.length) return null;
+ const femaleHints=/female|woman|girl|ayanda|leah|zanele|naledi|lindi|thando|lerato|mapula/i;
+ const naturalHints=/natural|neural|online|premium/i;
  const score=v=>{
-   const name=(v.name||''); const lang=(v.lang||'').toLowerCase(); let s=0;
-   if(lang==='en-za') s+=100;
-   else if(lang.startsWith('en-za')) s+=90;
-   else if(lang==='en-gb') s+=35;
-   else if(lang.startsWith('en')) s+=20;
-   if(/south africa|south african/i.test(name)) s+=60;
-   if(femaleHints.test(name)) s+=25;
-   if(matureHints.test(name)) s-=30;
+   const name=v.name||''; let s=0;
+   if((v.lang||'').toLowerCase()==='en-za') s+=100;
+   if(/south africa|south african/i.test(name)) s+=50;
+   if(femaleHints.test(name)) s+=30;
+   if(naturalHints.test(name)) s+=15;
+   if(/male|man|david|mark|george|daniel|narrator/i.test(name)) s-=40;
    return s;
  };
- return voices.filter(v=>(v.lang||'').toLowerCase().startsWith('en')).sort((a,b)=>score(b)-score(a))[0]||voices[0];
+ return za.sort((a,b)=>score(b)-score(a))[0];
+}
+function voiceFeedback(message){
+ const lesson=document.getElementById('lesson');
+ if(!lesson) return;
+ let box=lesson.querySelector('.mapula-voice-status');
+ if(!box){box=document.createElement('div');box.className='mapula-voice-status tip';const actions=lesson.querySelector('.mapula-actions');if(actions)actions.after(box);}
+ box.textContent=message;
 }
 function speakMapula(text){
- if(!('speechSynthesis' in window)) return;
+ if(!('speechSynthesis' in window)){voiceFeedback('Mapula voice is not supported in this browser.');return;}
+ const v=mapulaVoice();
+ if(!v){voiceFeedback('A South African English voice is not installed on this device yet. WordSpring will not use an American voice for Mapula.');return;}
  speechSynthesis.cancel();
  const u=new SpeechSynthesisUtterance(text);
- const v=mapulaVoice();
- if(v){u.voice=v;u.lang=v.lang||'en-ZA';} else u.lang='en-ZA';
- // Slightly raised pitch and natural conversational pace to make Mapula sound younger.
- u.pitch=1.32;
- u.rate=1.02;
+ u.voice=v;
+ u.lang='en-ZA';
+ // Brighter, younger delivery while keeping the South African voice model.
+ u.pitch=1.22;
+ u.rate=.98;
  u.volume=1;
+ voiceFeedback(`Mapula voice: ${v.name}`);
  speechSynthesis.speak(u);
 }
 window.mapulaSpeak=function(type){
  const text=introText(type);
  const go=()=>speakMapula(text);
  if(speechSynthesis.getVoices().length) go();
- else {speechSynthesis.addEventListener('voiceschanged',go,{once:true});setTimeout(go,700);}
+ else {speechSynthesis.addEventListener('voiceschanged',go,{once:true});setTimeout(go,900);}
 };
 function show(type){
  const g=guides[type]; if(!g){baseOpen(type);return;}
