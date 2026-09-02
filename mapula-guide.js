@@ -14,30 +14,6 @@ let pending=null;
 function gradeLabel(){return (window.gradeNames&&gradeNames[level])||String(level||'').replace('grade','Grade ');}
 function introText(type){const g=guides[type];return `Hi! I'm Mapula, your WordSpring learning buddy. Welcome to ${g.title}. ${g.goal} Here's my tip: ${g.tip} ${g.motivation}`;}
 
-// Mapula must use a true South African English system voice. We deliberately do NOT
-// fall back to US/GB English because that changes her character and accent.
-function mapulaVoice(){
- const voices=speechSynthesis.getVoices();
- if(!voices.length) return null;
- const za=voices.filter(v=>{
-   const lang=(v.lang||'').toLowerCase();
-   const name=v.name||'';
-   return lang==='en-za' || lang.startsWith('en-za') || /south africa|south african/i.test(name);
- });
- if(!za.length) return null;
- const femaleHints=/female|woman|girl|ayanda|leah|zanele|naledi|lindi|thando|lerato|mapula/i;
- const naturalHints=/natural|neural|online|premium/i;
- const score=v=>{
-   const name=v.name||''; let s=0;
-   if((v.lang||'').toLowerCase()==='en-za') s+=100;
-   if(/south africa|south african/i.test(name)) s+=50;
-   if(femaleHints.test(name)) s+=30;
-   if(naturalHints.test(name)) s+=15;
-   if(/male|man|david|mark|george|daniel|narrator/i.test(name)) s-=40;
-   return s;
- };
- return za.sort((a,b)=>score(b)-score(a))[0];
-}
 function voiceFeedback(message){
  const lesson=document.getElementById('lesson');
  if(!lesson) return;
@@ -45,33 +21,71 @@ function voiceFeedback(message){
  if(!box){box=document.createElement('div');box.className='mapula-voice-status tip';const actions=lesson.querySelector('.mapula-actions');if(actions)actions.after(box);}
  box.textContent=message;
 }
-function speakMapula(text){
- if(!('speechSynthesis' in window)){voiceFeedback('Mapula voice is not supported in this browser.');return;}
- const v=mapulaVoice();
- if(!v){voiceFeedback('A South African English voice is not installed on this device yet. WordSpring will not use an American voice for Mapula.');return;}
- speechSynthesis.cancel();
- const u=new SpeechSynthesisUtterance(text);
- u.voice=v;
- u.lang='en-ZA';
- // Brighter, younger delivery while keeping the South African voice model.
- u.pitch=1.22;
- u.rate=.98;
- u.volume=1;
- voiceFeedback(`Mapula voice: ${v.name}`);
- speechSynthesis.speak(u);
+
+// Prefer South African English, but always keep Mapula audible.
+// If a true en-ZA voice is unavailable, use the closest English female voice and clearly label it as temporary.
+function chooseMapulaVoice(){
+ const voices=window.speechSynthesis ? speechSynthesis.getVoices() : [];
+ if(!voices.length) return {voice:null,isZA:false};
+ const femaleHints=/female|woman|girl|ayanda|leah|zanele|naledi|lindi|thando|lerato|samantha|zira|tessa|aria|sonia/i;
+ const maleHints=/male|man|david|mark|george|daniel|guy|ryan|narrator/i;
+ const naturalHints=/natural|neural|online|premium/i;
+ const score=v=>{
+   const name=v.name||'';
+   const lang=(v.lang||'').toLowerCase();
+   let s=0;
+   if(lang==='en-za') s+=1000;
+   else if(lang.startsWith('en-za')) s+=900;
+   else if(/south africa|south african/i.test(name)) s+=800;
+   else if(lang==='en-gb') s+=350;
+   else if(lang.startsWith('en-gb')) s+=320;
+   else if(lang==='en-au') s+=280;
+   else if(lang.startsWith('en-au')) s+=260;
+   else if(lang.startsWith('en')) s+=120;
+   if(femaleHints.test(name)) s+=90;
+   if(naturalHints.test(name)) s+=30;
+   if(maleHints.test(name)) s-=120;
+   return s;
+ };
+ const english=voices.filter(v=>(v.lang||'').toLowerCase().startsWith('en'));
+ const pool=english.length?english:voices;
+ const voice=pool.slice().sort((a,b)=>score(b)-score(a))[0]||null;
+ const isZA=!!voice && (((voice.lang||'').toLowerCase().startsWith('en-za')) || /south africa|south african/i.test(voice.name||''));
+ return {voice,isZA};
 }
+
+function speakMapula(text){
+ if(!('speechSynthesis' in window)){voiceFeedback('Voice is not supported in this browser.');return;}
+ const picked=chooseMapulaVoice();
+ const u=new SpeechSynthesisUtterance(text);
+ if(picked.voice){u.voice=picked.voice;u.lang=picked.voice.lang||'en-ZA';}
+ else u.lang='en-ZA';
+ u.pitch=1.16;
+ u.rate=.96;
+ u.volume=1;
+ u.onstart=()=>voiceFeedback(picked.isZA ? `Mapula voice: ${picked.voice.name}` : 'Mapula is speaking with a temporary device voice while we add her dedicated South African voice.');
+ u.onerror=()=>voiceFeedback('Mapula could not play the voice. Please press Hear Mapula again.');
+ speechSynthesis.cancel();
+ if(typeof speechSynthesis.resume==='function') speechSynthesis.resume();
+ setTimeout(()=>speechSynthesis.speak(u),120);
+}
+
 window.mapulaSpeak=function(type){
  const text=introText(type);
- const go=()=>speakMapula(text);
- if(speechSynthesis.getVoices().length) go();
- else {speechSynthesis.addEventListener('voiceschanged',go,{once:true});setTimeout(go,900);}
+ if(!('speechSynthesis' in window)){voiceFeedback('Voice is not supported in this browser.');return;}
+ const start=()=>speakMapula(text);
+ if(speechSynthesis.getVoices().length){start();return;}
+ let played=false;
+ const once=()=>{if(played)return;played=true;start();};
+ speechSynthesis.addEventListener('voiceschanged',once,{once:true});
+ setTimeout(once,1000);
 };
+
 function show(type){
  const g=guides[type]; if(!g){baseOpen(type);return;}
  pending=type;
  const lesson=document.getElementById('lesson');
  lesson.innerHTML=`<div class="mapula-intro"><div class="mapula-avatar" aria-hidden="true"><div class="mapula-face">👧🏾</div><div class="mapula-name">Mapula</div><small>Your learning buddy</small></div><div class="mapula-message"><span class="mapula-kicker">${gradeLabel()} • ${g.icon} ${g.title}</span><h2>Hi! I’m Mapula 👋</h2><p>${g.goal}</p><div class="mapula-tip"><b>💡 Mapula’s tip</b><span>${g.tip}</span></div><p class="mapula-motivation">🌟 ${g.motivation}</p><div class="mapula-actions"><button type="button" class="secondary" onclick="mapulaSpeak('${type}')">🔊 Hear Mapula</button><button type="button" class="action" onclick="mapulaStart()">Start Exercise 1 →</button></div></div></div>`;
- setTimeout(()=>window.mapulaSpeak(type),300);
 }
 window.mapulaStart=function(){if(!pending)return;const t=pending;pending=null;baseOpen(t,0);};
 window.openLesson=function(type,index=0){
