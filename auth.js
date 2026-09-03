@@ -1,5 +1,5 @@
 const SB_URL='https://tlqqawiaoqbfxvqhnpof.supabase.co';
-const SB_KEY='sb_publishable_krM_1Ow_BWVYsWRpzwN--pw_6QMmvb7B';
+const SB_KEY='sb_publishable_krM_1Ow_BWVYsWRwzN--pw_6QMmvb7B';
 const authClient=window.supabase.createClient(SB_URL,SB_KEY);
 const SITE_URL='https://letsdoittogetherkids.co.za/';
 let authMode='login';
