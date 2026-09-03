@@ -1,7 +1,24 @@
 const SB_URL='https://tlqqawiaoqbfxvqhnpof.supabase.co';
 const SB_KEY='sb_publishable_krM_1Ow_BWVYsWRwzN--pw_6QMmvb7B';
 const authClient=window.supabase.createClient(SB_URL,SB_KEY);
+const SITE_URL='https://letsdoittogetherkids.co.za/';
 let authMode='login';
+
+function enterWordSpring(mode='login'){
+  const brandGate=document.getElementById('brandGate');
+  const authGate=document.getElementById('authGate');
+  if(brandGate)brandGate.classList.add('hidden');
+  if(authGate)authGate.classList.remove('hidden');
+  setAuthMode(mode);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function backToKidsHome(){
+  const brandGate=document.getElementById('brandGate');
+  const authGate=document.getElementById('authGate');
+  if(authGate)authGate.classList.add('hidden');
+  if(brandGate)brandGate.classList.remove('hidden');
+  message('');
+}
 function setAuthMode(mode){
   authMode=mode;
   const signup=mode==='signup';
@@ -28,7 +45,7 @@ async function submitAuth(e){
   message('Please wait...');
   if(authMode==='signup'){
     if(password!==confirm){message('Passwords do not match.',true);return}
-    const {data,error}=await authClient.auth.signUp({email,password,options:{emailRedirectTo:'https://sootheit.co.za/'}});
+    const {data,error}=await authClient.auth.signUp({email,password,options:{emailRedirectTo:SITE_URL}});
     if(error){message(error.message,true);return}
     if(data.session){showApp(data.user)}else message('Account created. Check your email and confirm your address before logging in.');
   }else{
@@ -40,23 +57,36 @@ async function submitAuth(e){
 async function forgotPassword(){
   const email=document.getElementById('authEmail').value.trim();
   if(!email){message('Enter your email address first.',true);return}
-  const {error}=await authClient.auth.resetPasswordForEmail(email,{redirectTo:'https://sootheit.co.za/'});
+  const {error}=await authClient.auth.resetPasswordForEmail(email,{redirectTo:SITE_URL});
   message(error?error.message:'Password reset email sent.',!!error);
 }
 async function logout(){
   await authClient.auth.signOut();
   document.getElementById('appShell').classList.add('hidden');
-  document.getElementById('authGate').classList.remove('hidden');
+  document.getElementById('authGate').classList.add('hidden');
+  const brandGate=document.getElementById('brandGate');
+  if(brandGate)brandGate.classList.remove('hidden');
   document.getElementById('authPassword').value='';
   setAuthMode('login');
 }
 function showApp(user){
+  const brandGate=document.getElementById('brandGate');
+  if(brandGate)brandGate.classList.add('hidden');
   document.getElementById('authGate').classList.add('hidden');
   document.getElementById('appShell').classList.remove('hidden');
   document.getElementById('userEmail').textContent=user?.email||'';
   if(typeof updateStats==='function')updateStats();
 }
-function message(text,bad=false){const el=document.getElementById('authMessage');el.textContent=text;el.style.color=bad?'#b42318':'#17824b'}
-authClient.auth.getSession().then(({data})=>{if(data.session)showApp(data.session.user);else setAuthMode('login')});
+function message(text,bad=false){const el=document.getElementById('authMessage');if(!el)return;el.textContent=text;el.style.color=bad?'#b42318':'#17824b'}
+authClient.auth.getSession().then(({data})=>{
+  if(data.session)showApp(data.session.user);
+  else {
+    document.getElementById('appShell').classList.add('hidden');
+    document.getElementById('authGate').classList.add('hidden');
+    const brandGate=document.getElementById('brandGate');
+    if(brandGate)brandGate.classList.remove('hidden');
+    setAuthMode('login');
+  }
+});
 authClient.auth.onAuthStateChange((_event,session)=>{if(session)showApp(session.user)});
 setAuthMode('login');
