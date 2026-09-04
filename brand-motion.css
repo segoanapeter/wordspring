@@ -1,0 +1,14 @@
+/* WordSpring living brand mark */
+.ws-brand-mark{display:inline-grid;grid-template-columns:auto auto;align-items:end;gap:0;position:relative;white-space:nowrap;transform-origin:50% 100%;animation:ws-arrive .7s cubic-bezier(.2,.8,.2,1) both}
+.ws-book{display:inline-block;font-size:.9em;transform-origin:50% 100%;animation:ws-book-breathe 4s ease-in-out infinite}
+.ws-sprout{display:inline-block;font-size:.75em;margin-left:-.12em;transform-origin:50% 100%;animation:ws-sprout-grow 3.2s ease-in-out infinite}
+.ws-brand-mark::after{content:'✦';position:absolute;right:-.45em;top:-.35em;font-size:.32em;color:#f2b84b;opacity:0;animation:ws-sparkle 3.2s ease-in-out infinite}
+.kids-brand .ws-brand-mark{font-size:34px}
+.auth-brand .ws-brand-mark,.brand .ws-brand-mark{font-size:1em;margin-right:.18em}
+.platform-intro .ws-brand-mark{font-size:.9em;margin-right:.12em}
+.empty-learners .ws-brand-mark{font-size:2.3rem}
+@keyframes ws-arrive{0%{opacity:0;transform:translateY(8px) scale(.8)}70%{transform:translateY(-2px) scale(1.06)}100%{opacity:1;transform:none}}
+@keyframes ws-book-breathe{0%,100%{transform:rotate(-2deg) scale(1)}50%{transform:rotate(1deg) scale(1.05)}}
+@keyframes ws-sprout-grow{0%,100%{transform:translateY(1px) rotate(-3deg) scale(.94)}45%{transform:translateY(-3px) rotate(4deg) scale(1.1)}65%{transform:translateY(-2px) rotate(-1deg) scale(1.06)}}
+@keyframes ws-sparkle{0%,35%,100%{opacity:0;transform:scale(.5) rotate(0)}50%{opacity:1;transform:scale(1.2) rotate(35deg)}65%{opacity:0;transform:scale(.8) rotate(70deg)}}
+@media(prefers-reduced-motion:reduce){.ws-brand-mark,.ws-book,.ws-sprout,.ws-brand-mark::after{animation:none!important}}
