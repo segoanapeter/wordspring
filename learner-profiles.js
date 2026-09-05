@@ -1,5 +1,5 @@
 let activeLearner=null;
-const learnerAvatars=['🌈','🦁','🐘','🦋','🌻','🚀'];
+const learnerAvatars=['🌱','📚','🦁','🐘','🦋','🌻','🚀'];
 
 async function learnerSession(){const {data}=await authClient.auth.getSession();return data.session}
 async function loadLearners(){
@@ -14,7 +14,7 @@ function renderLearnerPicker(learners){
   list.innerHTML='';
   learners.forEach(l=>{
     const b=document.createElement('button'); b.type='button'; b.className='learner-card';
-    b.innerHTML=`<span>${l.avatar||'🌈'}</span><b>${escapeLearner(l.display_name)}</b><small>Grade ${l.grade} • Term ${l.current_term}</small>`;
+    b.innerHTML=`<span>${l.avatar||'🌱'}</span><b>${escapeLearner(l.display_name)}</b><small>Grade ${l.grade} • Term ${l.current_term}</small>`;
     b.onclick=()=>selectLearner(l); list.appendChild(b);
   });
   picker.classList.remove('hidden');
@@ -24,7 +24,7 @@ function renderLearnerPicker(learners){
 function escapeLearner(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
 function openAddLearner(){
   document.getElementById('learnerForm').reset();
-  document.getElementById('learnerAvatar').value='🌈';
+  document.getElementById('learnerAvatar').value='🌱';
   document.getElementById('learnerFormWrap').classList.remove('hidden');
   document.getElementById('learnerName').focus();
 }
@@ -40,16 +40,16 @@ async function saveLearner(e){
   closeAddLearner(); await loadLearners();
 }
 function selectLearner(l){
-  activeLearner=l; localStorage.setItem('wordspring-active-learner',l.id);
+  activeLearner=l; window.activeLearner=l; localStorage.setItem('wordspring-active-learner',l.id);
   document.getElementById('learnerPicker').classList.add('hidden');
   document.getElementById('appShell').classList.remove('hidden');
-  document.getElementById('activeLearnerName').textContent=`${l.avatar||'🌈'} ${l.display_name}`;
+  document.getElementById('activeLearnerName').textContent=`${l.avatar||'🌱'} ${l.display_name}`;
   const level=`grade${l.grade}`; const select=document.getElementById('levelSelect'); if(select)select.value=level;
   if(typeof changeLevel==='function')changeLevel(level);
   if(typeof window.setTerm==='function')window.setTerm(l.current_term);
   if(typeof updateStats==='function')updateStats();
 }
-function switchLearner(){activeLearner=null;loadLearners()}
+function switchLearner(){activeLearner=null;window.activeLearner=null;loadLearners()}
 async function restoreLearner(){
   const session=await learnerSession();if(!session)return;
   const {data}=await authClient.from('learners').select('*').order('created_at');
