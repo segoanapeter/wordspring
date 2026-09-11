@@ -2,6 +2,7 @@ let activeLearner=null;
 const learnerAvatars=['🌱','📚','🦁','🐘','🦋','🌻','🚀'];
 const attemptQueueKey='wordspring-attempt-queue-v1';
 let attemptSyncing=false;
+let attemptIdempotencyReady=null;
 
 async function learnerSession(){const {data}=await authClient.auth.getSession();return data.session}
 async function loadLearners(){
@@ -33,7 +34,26 @@ async function restoreLearner(){const session=await learnerSession();if(!session
 function getAttemptQueue(){try{return JSON.parse(localStorage.getItem(attemptQueueKey)||'[]')}catch(e){return[]}}
 function setAttemptQueue(q){localStorage.setItem(attemptQueueKey,JSON.stringify(q));window.dispatchEvent(new CustomEvent('wordspring:sync-state',{detail:{pending:q.length}}))}
 function makeAttemptId(){return (crypto&&crypto.randomUUID)?crypto.randomUUID():`${Date.now()}-${Math.random().toString(36).slice(2)}`}
-async function insertAttempt(item){const session=await learnerSession();if(!session)throw new Error('Not signed in');const payload={owner_id:session.user.id,learner_id:item.learner_id,grade:item.grade,term:item.term,activity_type:item.activity_type,exercise_index:item.exercise_index,correct:item.correct,completed:true,points:item.points,response_text:item.response_text};const{error}=await authClient.from('attempts').insert(payload);if(error)throw error}
+function isIdempotencySchemaMissing(error){const code=String(error?.code||'');const message=String(error?.message||'').toLowerCase();return code==='42703'||code==='42P10'||message.includes('client_id')||message.includes('no unique or exclusion constraint')||message.includes('on conflict')}
+async function legacyInsertAttempt(payload){const legacy={...payload};delete legacy.client_id;const{error}=await authClient.from('attempts').insert(legacy);if(error)throw error}
+async function insertAttempt(item){
+  const session=await learnerSession();if(!session)throw new Error('Not signed in');
+  const payload={owner_id:session.user.id,client_id:item.client_id,learner_id:item.learner_id,grade:item.grade,term:item.term,activity_type:item.activity_type,exercise_index:item.exercise_index,correct:item.correct,completed:true,points:item.points,response_text:item.response_text};
+
+  // Once supabase-attempt-idempotency.sql is deployed, retries use the same client_id
+  // and duplicate POSTs become harmless. Until then, keep the existing site working.
+  if(attemptIdempotencyReady===false){await legacyInsertAttempt(payload);return}
+
+  const{error}=await authClient.from('attempts').upsert(payload,{onConflict:'owner_id,client_id',ignoreDuplicates:true});
+  if(!error){attemptIdempotencyReady=true;return}
+  if(isIdempotencySchemaMissing(error)){
+    attemptIdempotencyReady=false;
+    console.warn('WordSpring attempt idempotency migration is not active yet; using legacy inserts.');
+    await legacyInsertAttempt(payload);
+    return;
+  }
+  throw error
+}
 async function flushAttemptQueue(){if(attemptSyncing||!navigator.onLine)return;attemptSyncing=true;try{let q=getAttemptQueue();while(q.length){const item=q[0];try{await insertAttempt(item);q.shift();setAttemptQueue(q);window.dispatchEvent(new CustomEvent('wordspring:attempt-saved',{detail:item}))}catch(e){console.warn('Queued attempt still waiting',e);break}}}finally{attemptSyncing=false}}
 async function recordCloudAttempt(activityType,exerciseIndex,correct,responseText=''){
   if(!activeLearner)throw new Error('Choose a learner before recording progress');
