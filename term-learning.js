@@ -2,8 +2,8 @@
 // Original WordSpring content. Skill organisation is informed by DBE CAPS language strands.
 (function(){
   const termNames={term1:'Term 1',term2:'Term 2',term3:'Term 3',term4:'Term 4'};
-  let term=localStorage.getItem('wsTerm')||'term1';
-  if(!termNames[term]) term='term1';
+  const normaliseTerm=v=>{const s=String(v||'').toLowerCase().replace(/\s+/g,'');const n=s.replace(/^term/,'');return /^[1-4]$/.test(n)?'term'+n:null};
+  let term=normaliseTerm(localStorage.getItem('wsTerm'))||'term1';
   window.wsTerm=term;
 
   const focus={
@@ -14,7 +14,8 @@
     grade5:{term1:'Reading strategies, vocabulary and sentence control',term2:'Information texts, inference and language structures',term3:'Critical reading, source awareness and complex language',term4:'Independent comprehension, editing and consolidation'}
   };
 
-  // Preserve the grade-specific base banks, then create four distinct term variants.
+  // Preserve the grade-specific base banks, then create four distinct term orderings.
+  // These rotations are a compatibility layer until each term has its own authored bank.
   const base={};
   ['grade1','grade2','grade3','grade4','grade5'].forEach(g=>{base[g]={};Object.keys(banks[g]||{}).forEach(type=>base[g][type]=(banks[g][type]||[]).slice());});
   const rotate=(arr,n)=>arr.length?arr.slice(n%arr.length).concat(arr.slice(0,n%arr.length)):[];
@@ -43,15 +44,21 @@
   }
 
   window.changeTerm=function(v){
-    if(!termNames[v]) return; term=v; window.wsTerm=v; localStorage.setItem('wsTerm',v); applyTerm(); updateFocus();
-    if(window.lesson) lesson.innerHTML='<h2>'+((gradeNames&&gradeNames[level])||'Grade')+' • '+termNames[v]+'</h2><p>'+focus[level][v]+'. Choose an activity to begin.</p>';
+    const next=normaliseTerm(v); if(!next) return; term=next; window.wsTerm=next; localStorage.setItem('wsTerm',next); applyTerm();
+    const select=document.getElementById('termSelect'); if(select&&select.value!==next) select.value=next;
+    updateFocus();
+    if(window.lesson) lesson.innerHTML='<h2>'+((gradeNames&&gradeNames[level])||'Grade')+' • '+termNames[next]+'</h2><p>'+focus[level][next]+'. Choose an activity to begin.</p>';
     if(typeof updateStats==='function') updateStats();
+    window.dispatchEvent(new CustomEvent('wordspring:term-changed',{detail:{term:Number(next.slice(-1)),term_key:next,grade:level}}));
   };
+
+  // Learner profiles store current_term as 1..4. This bridge ensures selecting a learner
+  // always activates that learner's curriculum term instead of retaining the last device term.
+  window.setTerm=function(v){const next=normaliseTerm(v);if(next)window.changeTerm(next);};
 
   const oldChange=window.changeLevel;
   window.changeLevel=function(v){ if(oldChange) oldChange(v); updateFocus(); };
 
-  // Skill-aware score sheet: adds grade/term context while retaining existing scoring engine.
   const oldScores=window.openScores;
   window.openScores=function(){
     if(oldScores) oldScores();
