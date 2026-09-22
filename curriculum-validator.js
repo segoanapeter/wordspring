@@ -9,8 +9,8 @@
   function validateExercise(type,exercise,path,errors){
     if(!Array.isArray(exercise)||exercise.length<2){errors.push(path+': exercise must be an array with at least 2 fields');return;}
     if(choiceTypes.has(type)){
-      const options=type==='reading'?exercise[2]:exercise[1];
-      const answer=type==='reading'?exercise[3]:(type==='words'?exercise[3]:exercise[2]);
+      const options=(type==='reading'||type==='words')?exercise[2]:exercise[1];
+      const answer=(type==='reading'||type==='words')?exercise[3]:exercise[2];
       if(!Array.isArray(options)||options.length<2)errors.push(path+': multiple-choice exercise needs at least 2 options');
       if(!Number.isInteger(answer)||!Array.isArray(options)||answer<0||answer>=options.length)errors.push(path+': answer index is invalid');
     }
