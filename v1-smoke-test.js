@@ -10,6 +10,24 @@
     '[data-testid="activity-quest"]','[data-testid="lesson"]'
   ];
   function check(name,pass,detail){return {name,pass:!!pass,detail:detail||''};}
+  function readQueue(){try{return JSON.parse(localStorage.getItem('wordspring-attempt-queue-v1')||'[]')}catch(e){return[]}}
+  function isolationChecks(){
+    const out=[];
+    const selected=window.activeLearner||null;
+    out.push(check('Active learner context is explicit',!selected||!!selected.id,selected?String(selected.id):'No learner selected'));
+    const q=readQueue();
+    out.push(check('Every queued attempt belongs to a learner',q.every(a=>!!a.learner_id),q.length+' queued'));
+    out.push(check('Every queued attempt has a retry-safe client id',q.every(a=>!!a.client_id),q.length+' queued'));
+    if(selected){
+      const foreign=q.filter(a=>a.learner_id!==selected.id);
+      out.push(check('Queued progress is isolated from active learner',foreign.length===0,foreign.length+' foreign queued attempt(s)'));
+      out.push(check('Active learner Grade is valid',Number(selected.grade)>=1&&Number(selected.grade)<=5,'Grade '+selected.grade));
+      out.push(check('Active learner Term is valid',Number(selected.current_term)>=1&&Number(selected.current_term)<=4,'Term '+selected.current_term));
+      const grade=document.querySelector('[data-testid="grade-select"]');
+      out.push(check('UI Grade matches active learner',!grade||grade.value==='grade'+selected.grade,grade?grade.value:'missing'));
+    }
+    return out;
+  }
   async function run(){
     const results=[];
     const validation=typeof window.validateWordSpringCurriculum==='function'?window.validateWordSpringCurriculum():null;
@@ -26,6 +44,7 @@
       const el=document.querySelector('[data-testid="activity-'+type+'"]');
       results.push(check('Activity launch control: '+type,!!el&&!el.disabled));
     });
+    results.push(...isolationChecks());
     const failed=results.filter(r=>!r.pass);
     const report={ok:failed.length===0,passed:results.length-failed.length,failed:failed.length,results,checkedAt:new Date().toISOString()};
     window.wsV1SmokeReport=report;
@@ -35,4 +54,5 @@
     return report;
   }
   window.runWordSpringSmokeTest=run;
+  window.runWordSpringIsolationChecks=()=>isolationChecks();
 })();
