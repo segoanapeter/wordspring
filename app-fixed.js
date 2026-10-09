@@ -1,6 +1,7 @@
 const lesson = document.getElementById('lesson');
 let level = localStorage.getItem('wsLevel') || 'starter';
-let scores = JSON.parse(localStorage.getItem('wsScores') || '{}');
+// Legacy shared-device scores cannot be safely assigned to a child.
+let scores = {};
 let current = { type: null, index: 0 };
 let answerLocked=false;
 
@@ -9,7 +10,28 @@ const banks = {
   builder: {sentence:[['sister • carefully • painted • wooden chair','My sister carefully painted the wooden chair.'],['learners • completed • project • together','The learners completed the project together.'],['rain • fell • softly • roof','The rain fell softly on the roof.']],reading:[['Ayesha borrowed a library book about space. She read a chapter each night and wrote down new facts.','What habit helped Ayesha learn?',['Reading regularly','Skipping chapters','Watching television'],0],['Kagiso noticed litter near the soccer field. He and his friends collected it and sorted recyclable items.','What did the friends do after collecting litter?',['Burned it','Sorted recyclable items','Left it there'],1],['Zanele practised her speech several times before assembly. When she spoke, she felt confident.','What most likely helped Zanele feel confident?',['Practice','Luck','Speaking quietly'],0]],speech:[['responsibility','re • spon • si • bil • i • ty'],['education','ed • u • ca • tion'],['community','com • mu • ni • ty']],words:[['determined','not giving up easily',['persistent','careless','confused'],0],['observe','to watch carefully',['notice','forget','hide'],0],['essential','completely necessary',['optional','necessary','unusual'],1]],grammar:[['the children was excited',['The children were excited.','The children was excited.','the children were excited'],0],['sipho and me went to the library',['Sipho and I went to the library.','Sipho and me went library.','sipho and I went to library'],0],['yesterday we play football',['Yesterday we played football.','Yesterday we play football.','yesterday we playing football'],0]],quest:[['Choose the adjective: “The bright sun warmed the playground.”',['warmed','bright','playground'],1],['Which sentence uses the past tense?',['We walk home.','We walked home.','We will walk home.'],1],['Choose the best conjunction: “I studied hard ___ I wanted to improve.”',['because','but','or'],0]]},
   explorer: {sentence:[['although • rain continued • team • finished • match','Although the rain continued, the team finished the match.'],['because • research • thorough • presentation • convincing','Because the research was thorough, the presentation was convincing.'],['learners • who practised regularly • improved • fluency','Learners who practised regularly improved their fluency.']],reading:[['Mpho initially found public speaking difficult. Instead of avoiding it, he joined the debate club and volunteered for short presentations. Over time, his confidence grew.','What is the main idea?',['Avoid difficult tasks','Practice can build confidence','Debate is easy'],1],['A community garden transformed an unused piece of land. Residents grew vegetables, shared skills and donated extra produce to a nearby centre.','Which benefit is supported by the passage?',['The project strengthened community cooperation','The land became a car park','Residents stopped growing food'],0],['After comparing several sources, Lerato discovered that two articles made conflicting claims. She checked the authors and evidence before deciding which was more reliable.','What skill did Lerato demonstrate?',['Critical evaluation','Memorisation','Guessing'],0]],speech:[['entrepreneurship','en • tre • pre • neur • ship'],['communication','com • mu • ni • ca • tion'],['extraordinary','ex • traor • di • na • ry']],words:[['credible','able to be trusted',['reliable','ordinary','unclear'],0],['interpret','to explain or understand meaning',['analyse meaning','copy','ignore'],0],['significant','important or noticeable',['minor','important','hidden'],1]],grammar:[['neither of the answers are correct',['Neither of the answers is correct.','Neither of the answers are correct.','neither answers is correct'],0],['if i had known i would have helped',['If I had known, I would have helped.','If I knew, I would helped.','if I had known I help'],0],['the report which was detailed it explained the problem',['The detailed report explained the problem.','The report detailed it explained the problem.','the report which detailed explained'],0]],quest:[['Which sentence contains a subordinate clause?',['We arrived early.','Although it was raining, we continued walking.','The bell rang.'],1],['Choose the strongest synonym for “important”.',['significant','nice','small'],0],['Which punctuation best joins two closely related independent clauses?',['Semicolon','Apostrophe','Quotation mark'],0]]}
 };
-function save(){localStorage.setItem('wsScores',JSON.stringify(scores));localStorage.setItem('wsLevel',level);updateStats()}
+const learnerScoresPrefix='wordspring-learner-scores-v1:';
+function setLearnerLocalScores(learnerId){
+  let next={};
+  if(learnerId){
+    try{
+      const parsed=JSON.parse(localStorage.getItem(learnerScoresPrefix+learnerId)||'{}');
+      if(parsed && typeof parsed==='object' && !Array.isArray(parsed))next=parsed;
+    }catch(e){console.warn('Could not restore learner scores',e)}
+  }
+  scores=next;
+  current={type:null,index:0};
+  answerLocked=false;
+  updateStats();
+}
+window.setLearnerLocalScores=setLearnerLocalScores;
+window.clearLearnerLocalScores=()=>setLearnerLocalScores(null);
+function save(){
+  const learner=window.activeLearner;
+  if(learner?.id)localStorage.setItem(learnerScoresPrefix+learner.id,JSON.stringify(scores));
+  localStorage.setItem('wsLevel',level);
+  updateStats();
+}
 function key(t){return level+'_'+t} function stat(t){return scores[key(t)]||(scores[key(t)]={attempts:0,correct:0,completed:0})}
 function changeLevel(v){level=v;save();lesson.innerHTML='<h2>Level changed!</h2><p>Choose an activity to start '+v+' exercises.</p>'}
 function getSAvoice(){const vs=speechSynthesis.getVoices();return vs.find(v=>v.lang.toLowerCase()==='en-za')||vs.find(v=>/south africa/i.test(v.name))||vs.find(v=>v.lang.toLowerCase().startsWith('en-gb'))||vs.find(v=>v.lang.toLowerCase().startsWith('en'))}
